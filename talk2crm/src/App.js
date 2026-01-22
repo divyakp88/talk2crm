@@ -1,68 +1,56 @@
 import logo from './logo.svg';
 import './App.css';
-import React, { useState,useRef } from "react";
+import React, { useState} from "react";
 import { ReactMic } from "react-mic";
 import axios from "axios";
 
+
 function App() {
   const [recording, setRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [jsonOutput, setJsonOutput] = useState(null);
 
-  // Browser SpeechRecognition for live transcription
-  const recognitionRef = useRef(null);
-
-if (!recognitionRef.current) {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  recognitionRef.current = new SpeechRecognition();
-  recognitionRef.current.lang = "en-IN";
-  recognitionRef.current.continuous = false;
-  recognitionRef.current.interimResults = false;
-
-  recognitionRef.current.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    console.log("Recognized:", text);
-    setTranscript(text);
-  };
-}
-
   // Start recording
   const startRecording = () => {
+    setRecording(true);
     setTranscript("");
     setJsonOutput(null);
-    setRecording(true);
-    recognitionRef.current.start();
+    setAudioBlob(null);
   };
 
   // Stop recording
   const stopRecording = () => {
     setRecording(false);
-    recognitionRef.current.stop();
   };
 
-  // Handle ReactMic stop event 
-  const onStop = async (recordedBlob) => {
+  // When ReactMic stops recording, this is called
+  const onStop = (recordedBlob) => {
     console.log("Recorded blob:", recordedBlob);
-
-    
+    setAudioBlob(recordedBlob);
   };
 
-  // Send transcript to backend
+  // Send audio blob to Whisper backend
   const sendToBackend = async () => {
-    console.log("Sending transcript:", transcript);
+    if (!audioBlob) return alert("Please record audio first");
 
     try {
+      const formData = new FormData();
+      formData.append("file", audioBlob.blob, "recording.wav");
+
       const response = await axios.post(
-        "http://localhost:8001/extract",
-        { transcript }
+        "http://localhost:8001/transcribe",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-      console.log("Response:", response.data);
-      setJsonOutput(response.data);
+
+      console.log("Backend response:", response.data);
+
+      setTranscript(response.data.transcript);
+      setJsonOutput(response.data.extracted_data);
     } catch (error) {
       console.error("Backend error:", error);
-      setJsonOutput({ error: "Backend not connected" });
+      setJsonOutput({ error: "Backend not connected or failed" });
     }
   };
 
@@ -77,6 +65,7 @@ if (!recognitionRef.current) {
         onStop={onStop}
         strokeColor="#1976d2"
         backgroundColor="#f5f5f5"
+        mimeType="audio/wav"
       />
 
       {/* Recording buttons */}
@@ -86,14 +75,18 @@ if (!recognitionRef.current) {
         <button onClick={stopRecording}>Stop Recording</button>
       )}
 
+      {/* Send to backend */}
+      {audioBlob && (
+        <div style={{ marginTop: "20px" }}>
+          <button onClick={sendToBackend}>Send to Backend</button>
+        </div>
+      )}
+
       {/* Transcription display */}
       {transcript && (
         <div style={{ marginTop: "20px" }}>
           <h3>Transcribed Text</h3>
           <p>{transcript}</p>
-          <button onClick={sendToBackend}>
-            Send to Backend
-          </button>
         </div>
       )}
 
