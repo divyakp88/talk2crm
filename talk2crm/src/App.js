@@ -12,7 +12,7 @@ function App() {
   const [jsonOutput, setJsonOutput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
-
+  const [results, setResults] = useState([]);
   // Start recording
   const startRecording = () => {
     setRecording(true);
@@ -48,14 +48,29 @@ function App() {
       );
 
       console.log("Backend response:", response.data);
-
+      
       setTranscript(response.data.transcript);
       setJsonOutput(response.data.extracted_data);
+      
+      setResults([
+        ...results,
+        {
+          transcript: response.data.transcript,
+          full_name: response.data.extracted_data.customer.full_name,
+          phone: response.data.extracted_data.customer.phone,
+          address: response.data.extracted_data.customer.address,
+          city: response.data.extracted_data.customer.city,
+          locality: response.data.extracted_data.customer.locality,
+          summary: response.data.extracted_data.interaction.summary,
+          timestamp: response.data.extracted_data.interaction.created_at
+        }
+      ]);
       setStatusMsg("Processing completed successfully");
     } catch (error) {
       console.error("Backend error:", error);
       setJsonOutput({ error: "Backend not connected or failed" });
       setStatusMsg("Backend error. Please try again.");
+      
     } finally{
       setLoading(false);
     }
@@ -112,8 +127,43 @@ function App() {
           <pre>{JSON.stringify(jsonOutput, null, 2)}</pre>
         </div>
       )}
-    </div>
-  );
+
+      {/*Dashboard table*/}
+      {results.length > 0 && (
+  <div style={{ marginTop: "30px" }}>
+    <h3>Evaluation Dashboard</h3>
+    <table border="1" cellPadding="5" style={{ width: "100%", borderCollapse: "collapse" }}>
+      <thead>
+        <tr>
+          <th>Transcript</th>
+          <th>Full Name</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>City</th>
+          <th>Locality</th>
+          <th>Summary</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {results.map((row, index) => (
+          <tr key={index}>
+            <td>{row.transcript}</td>
+            <td>{row.full_name}</td>
+            <td>{row.phone}</td>
+            <td>{row.address}</td>
+            <td>{row.city}</td>
+            <td>{row.locality}</td>
+            <td>{row.summary}</td>
+            <td>{row.timestamp}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+</div>
+);
 }
 
 export default App;
