@@ -68,4 +68,105 @@ This project was built as part of a technical assessment for a **voice-first CRM
   ↓
 - **Frontend Dashboard + CSV Export**
 
+## 📊 Extracted CRM Fields
+
+### Customer
+- Full Name  
+- Phone Number  
+- Address  
+- City  
+- Locality  
+
+### Interaction
+- Summary  
+- Timestamp  
+
+> If a field is not found, the system returns: `Not mentioned`  
+
+---
+
+## 🧪 Evaluation Dashboard
+
+Each voice interaction creates one row in the dashboard. The dashboard displays:
+
+- Transcript (raw Whisper output)  
+- Extracted CRM fields  
+- Interaction summary  
+- Timestamp  
+
+This allows reviewers to:
+
+- Verify extraction accuracy  
+- Compare transcript vs structured data
+
+# CSV Export (HITL‑Ready)
+
+The dashboard can be exported as a **CSV file**:
+
+- Excel‑compatible
+- UTF‑8 encoded
+- One row per voice interaction
+
+This supports:
+
+- Internal verification
+- QA review
+- Training data curation
+# How to Run the Project
+ ## Frontend Setup
+ ```
+npm start
+```
+The app will run at:
+```
+http://localhost/3000
+```
+ ## Backend Setup(Expected API)
+
+The frontend expects a backend endpoint:
+```
+POST http://localhost:8001/transcribe
+```
+Request:
+
+Multipart form‑data
+
+Key: file (audio/wav)
+
+Response format:
+- **Format:** JSON  
+```json
+{
+  "customer": {
+    "full_name": "string",
+    "phone": "string",
+    "address": "string",
+    "city": "string",
+    "locality": "string"
+  },
+  "interaction": {
+    "summary": "string",
+    "created_at": "ISO 8601 timestamp"
+  }
+}
+```
+## Key Design Decisions
+
+- **Vertical layout only** for clarity and mobile friendliness  
+- **Client-side CSV export** (no backend dependency)  
+- **Explicit evaluation focus**, not just UI demo  
+- **Graceful fallback** for missing data
+
+## Future Enhancements
+
+- **Confidence score** per extracted field  
+- **Field-level source highlighting**  
+- **Editable corrections** (HITL feedback loop)  
+- **Batch audio upload**  
+- **Authentication & user roles**
+
+## Conclusion
+
+Talk2CRM demonstrates how voice interactions can be reliably converted into structured, auditable CRM data. The focus on evaluation transparency and HITL-friendly outputs makes it suitable for real-world internal deployments and further ML training.
+
 
