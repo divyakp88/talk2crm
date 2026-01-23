@@ -150,6 +150,18 @@ Response format:
   }
 }
 ```
+
+## 📊 Demo Screenshots
+
+### 1.Voice Input (Microphone Capture)
+<img src="https://github.com/user-attachments/assets/fa5f0cb6-0c60-462d-a10b-36407cac425f" width="900" />
+
+### 2.Speech-to-Text & Evaluation Dashboard
+<img src="https://github.com/user-attachments/assets/0fa7afd4-dd75-4095-b1da-3aef8f8b26f0" width="900" />
+
+### 3.HITL Evaluation – Excel-Style Results Sheet
+<img src="https://github.com/user-attachments/assets/8b0f18db-3a8e-436d-a5fd-f13668ad932d" width="900" /> 
+
 ## Key Design Decisions
 
 - **Vertical layout only** for clarity and mobile friendliness  
