@@ -76,6 +76,33 @@ function App() {
     }
   };
 
+  //export dshboard table as CSV
+  const exportToCSV = () => {
+    if (results.length === 0) return;
+    const headers = ["Transcript", "Full Name", "Phone", "Address", "City", "Locality", "Summary", "Timestamp"];
+    const rows = results.map(r => [
+      r.transcript,
+      r.full_name,
+      r.phone,
+      r.address,
+      r.city,
+      r.locality,
+      r.summary,
+      r.timestamp
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers, ...rows].map(e => e.map(a => `"${a}"`).join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "evaluation_dashboard.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h2>Talk2CRM – Voice CRM</h2>
@@ -132,6 +159,7 @@ function App() {
       {results.length > 0 && (
   <div style={{ marginTop: "30px" }}>
     <h3>Evaluation Dashboard</h3>
+    <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>Export to CSV</button>
     <table border="1" cellPadding="5" style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr>
