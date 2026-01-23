@@ -2,10 +2,12 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
+from groq import Groq
 import whisper
 import tempfile
 import os
 import re
+import json
 
 app=FastAPI()
 
@@ -20,25 +22,52 @@ app.add_middleware(
 
 #Load whisper model
 
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+
 model=whisper.load_model("small")
 
 def extract_customer_data(transcript:str):
-    name_match = re.search(r"(?:name is|this is)\s+([A-Za-z ]+)", transcript, re.I)
-    phone_match = re.search(r"\b\d{10}\b", transcript)
-    return {
-        "customer": {
-            "full_name": name_match.group(1).strip() if name_match else "Unknown",
-            "phone": phone_match.group() if phone_match else "Not mentioned",
-            "address": "Not mentioned",
-            "city": "Not mentioned",
-            "locality": "Not mentioned"
-        },
-        "interaction": {
-            "summary": transcript[:100],
-            "created_at": datetime.utcnow().isoformat()
-        }
-    }
+    prompt = f"""
+You are a CRM data extraction system.
 
+Extract the following fields from the transcript.
+If a field is missing, return "Not mentioned".
+
+Return ONLY valid JSON in this format:
+
+{{
+  "customer": {{
+    "full_name": "",
+    "phone": "",
+    "address": "",
+    "city": "",
+    "locality": ""
+  }},
+  "interaction": {{
+    "summary": "",
+   
+  }}
+}}
+
+Transcript:
+\"\"\"{transcript}\"\"\"
+"""
+    response = groq_client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    content = response.choices[0].message.content.strip()
+
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        return {
+            "error": "LLM returned invalid JSON",
+            "raw_output": content
+        }
 #API trancribe+extract
 @app.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
@@ -54,7 +83,8 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     #extract CRM data
     extracted_data=extract_customer_data(transcript_text)
-
+    if "interaction" in extracted_data:
+        extracted_data["interaction"]["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if os.path.exists(temp_audio_path):
         os.remove(temp_audio_path)
     return{

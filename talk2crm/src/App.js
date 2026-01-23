@@ -10,6 +10,8 @@ function App() {
   const [audioBlob, setAudioBlob] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [jsonOutput, setJsonOutput] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
 
   // Start recording
   const startRecording = () => {
@@ -33,7 +35,8 @@ function App() {
   // Send audio blob to Whisper backend
   const sendToBackend = async () => {
     if (!audioBlob) return alert("Please record audio first");
-
+    setLoading(true);
+    setStatusMsg("Please wait, data is processing at the backend...");
     try {
       const formData = new FormData();
       formData.append("file", audioBlob.blob, "recording.wav");
@@ -48,9 +51,13 @@ function App() {
 
       setTranscript(response.data.transcript);
       setJsonOutput(response.data.extracted_data);
+      setStatusMsg("Processing completed successfully");
     } catch (error) {
       console.error("Backend error:", error);
       setJsonOutput({ error: "Backend not connected or failed" });
+      setStatusMsg("Backend error. Please try again.");
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -78,7 +85,15 @@ function App() {
       {/* Send to backend */}
       {audioBlob && (
         <div style={{ marginTop: "20px" }}>
-          <button onClick={sendToBackend}>Send to Backend</button>
+          <button onClick={sendToBackend} disabled={loading} style={{
+            opacity: loading ? 0.6 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+            }}>{loading ? "Processing..." : "Send to Backend"}</button>
+            {statusMsg && (
+        <p style={{ marginTop: "10px", color: "#555" }}>
+        {statusMsg}
+  </p>
+)}
         </div>
       )}
 
