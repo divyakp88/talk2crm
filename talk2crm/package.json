@@ -2,7 +2,7 @@
   "name": "talk2crm",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://divyakp88.github.io/talk2crm/talk2crm",
+  "homepage": "https://divyakp88.github.io/talk2crm",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
