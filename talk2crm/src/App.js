@@ -42,7 +42,7 @@ function App() {
       formData.append("file", audioBlob.blob, "recording.wav");
 
       const response = await axios.post(
-        "http://localhost:8001/transcribe",
+        "https://talk2crm.onrender.com",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
