@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 from groq import Groq
-import whisper
 import tempfile
 import os
 import re
@@ -25,7 +24,7 @@ app.add_middleware(
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-model=whisper.load_model("tiny")
+#model=whisper.load_model("tiny")
 @app.get("/")
 def root():
     return {"status": "Talk2CRM backend running"}
@@ -81,9 +80,15 @@ async def transcribe_audio(file: UploadFile = File(...)):
         temp_audio_path=temp_audio.name
 
     #trancribe using whisper
-    result=model.transcribe(temp_audio_path)
-    transcript_text=result["text"]
+    #result=model.transcribe(temp_audio_path)
+    #transcript_text=result["text"]
 
+    # GROQ WHISPER API (NO LOCAL MODEL)
+    transcription = groq_client.audio.transcriptions.create(
+        file=open(temp_audio_path, "rb"),
+        model="whisper-large-v3"
+    )
+    transcript_text = transcription.text
     #extract CRM data
     extracted_data=extract_customer_data(transcript_text)
     if "interaction" in extracted_data:
