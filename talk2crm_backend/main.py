@@ -25,7 +25,7 @@ app.add_middleware(
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-model=whisper.load_model("base")
+model=whisper.load_model("tiny")
 @app.get("/")
 def root():
     return {"status": "Talk2CRM backend running"}
